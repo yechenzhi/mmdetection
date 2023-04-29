@@ -16,7 +16,7 @@ IMG_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.pgm', '.tif',
                   '.tiff', '.webp')
 
 
-def get_file_list(source_root: str) -> [list, dict]:
+def get_file_list(source_root: str):
     """Get file list.
 
     Args:
@@ -63,7 +63,7 @@ def parse_args():
     parser.add_argument(
         '--out-dir', default='./output', help='Path to output file')
     parser.add_argument(
-        '--device', default='cuda:0', help='Device used for inference')
+        '--device', default='cpu', help='Device used for inference')
     parser.add_argument(
         '--show', action='store_true', help='Show the detection results')
     parser.add_argument(
@@ -98,6 +98,7 @@ def main():
                              reset_cls_layer_weight)
 
     # class name embeddings
+    # import pdb; pdb.set_trace()
     if args.class_name:
         dataset_classes = args.class_name
     elif args.dataset:
@@ -108,6 +109,7 @@ def main():
     reset_cls_layer_weight(model, embedding)
 
     # start detector inference
+    import pdb; pdb.set_trace()
     progress_bar = ProgressBar(len(files))
     for file in files:
         result = inference_detector(model, file)
