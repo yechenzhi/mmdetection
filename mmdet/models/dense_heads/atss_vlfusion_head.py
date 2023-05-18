@@ -17,7 +17,7 @@ from transformers import BertConfig
 from mmdet.registry import MODELS
 from mmdet.structures.bbox import cat_boxes
 from mmdet.utils import InstanceList
-from ..utils import filter_scores_and_topk, select_single_mlvl, VLFuse, permute_and_flatten
+from ..utils import filter_scores_and_topk, select_single_mlvl, VLFuse, permute_and_flatten, BertEncoderLayer
 from .atss_head import ATSSHead
 
 
@@ -328,8 +328,6 @@ class VLFusionModule(BaseModel):
         dyhead_tower = []
         for i in range(num_dyhead_blocks):
             if self.early_fuse:
-                from ..language_models import BertEncoderLayer
-
                 # cross-modality fusion
                 dyhead_tower.append(VLFuse())
                 # lang branch
