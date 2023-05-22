@@ -193,6 +193,11 @@ class BiMultiHeadAttention(nn.Module):
 
 
 class BiAttentionBlockForCheckpoint(nn.Module):
+    """BiAttentionBlock Module:
+        First, multi-level visual features are concated;
+        Then the concated visual feature and lang feature are fused by attention;
+        Finally the newly visual feature are split into multi levels.
+    """
 
     def __init__(self,
                  v_dim,
@@ -254,10 +259,7 @@ class BiAttentionBlockForCheckpoint(nn.Module):
             visu_feat.append(new_v_per_level)
             start += h * w
 
-        lang_feat = [new_l, None, None, None, None]
-
-        return visu_feat[0], visu_feat[1], visu_feat[2], visu_feat[3], visu_feat[4], lang_feat[0], lang_feat[1], \
-            lang_feat[2], lang_feat[3], lang_feat[4]
+        return visu_feat[0], visu_feat[1], visu_feat[2], visu_feat[3], visu_feat[4], new_l
 
     def single_attention_call(self, v, l, attention_mask_l=None):
         v = self.layer_norm_v(v)
@@ -290,12 +292,12 @@ class VLFuse(nn.Module):
         language_dict_features = x['lang']
 
         if self.use_checkpoint:
-            q0, q1, q2, q3, q4, l0, _, _, _, _ = checkpoint.checkpoint(
+            q0, q1, q2, q3, q4, l0 = checkpoint.checkpoint(
                 self.b_attn, visual_features[0], visual_features[1],
                 visual_features[2], visual_features[3], visual_features[4],
                 language_dict_features['hidden'], language_dict_features['masks'])
         else:
-            q0, q1, q2, q3, q4, l0, _, _, _, _ = self.b_attn(
+            q0, q1, q2, q3, q4, l0 = self.b_attn(
                 visual_features[0], visual_features[1],
                 visual_features[2], visual_features[3], visual_features[4],
                 language_dict_features['hidden'], language_dict_features['masks'])
