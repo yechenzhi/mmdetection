@@ -272,9 +272,10 @@ class BiAttentionBlockForCheckpoint(nn.Module):
 class VLFuse(nn.Module):
     """Early Fusion Module."""
 
-    def __init__(self):
+    def __init__(self, use_checkpoint):
         super().__init__()
         # bi-direction (text->image, image->text)
+        self.use_checkpoint = use_checkpoint
         self.b_attn = BiAttentionBlockForCheckpoint(
             v_dim=256,
             l_dim=768,
@@ -288,10 +289,16 @@ class VLFuse(nn.Module):
         visual_features = x['visual']
         language_dict_features = x['lang']
 
-        q0, q1, q2, q3, q4, l0, _, _, _, _ = checkpoint.checkpoint(
-            self.b_attn, visual_features[0], visual_features[1],
-            visual_features[2], visual_features[3], visual_features[4],
-            language_dict_features['hidden'], language_dict_features['masks'])
+        if self.use_checkpoint:
+            q0, q1, q2, q3, q4, l0, _, _, _, _ = checkpoint.checkpoint(
+                self.b_attn, visual_features[0], visual_features[1],
+                visual_features[2], visual_features[3], visual_features[4],
+                language_dict_features['hidden'], language_dict_features['masks'])
+        else:
+            q0, q1, q2, q3, q4, l0, _, _, _, _ = self.b_attn(
+                visual_features[0], visual_features[1],
+                visual_features[2], visual_features[3], visual_features[4],
+                language_dict_features['hidden'], language_dict_features['masks'])
 
         fused_visual_features = [q0, q1, q2, q3, q4]
         language_features = l0
